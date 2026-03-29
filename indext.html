@@ -1,1 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vocabulary Homework</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<style>
+body{
+font-family: Arial;
+background:#eef3ff;
+text-align:center;
+margin:0;
+padding:0;
+}
+
+.container{
+background:white;
+max-width:400px;
+margin:20px auto;
+padding:20px;
+border-radius:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+button{
+padding:12px;
+margin:5px;
+border:none;
+border-radius:10px;
+background:#4CAF50;
+color:white;
+font-size:16px;
+width:90%;
+}
+
+button:hover{
+background:#2ecc71;
+}
+
+input{
+padding:10px;
+margin:8px;
+width:85%;
+font-size:16px;
+}
+
+#score{
+color:#e67e22;
+font-weight:bold;
+}
+
+img{
+margin:10px;
+border-radius:10px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+td, th{
+border:1px solid #ccc;
+padding:5px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📚 Vocabulary Homework</h2>
+
+<div class="container">
+
+<input id="studentName" placeholder="Enter your name">
+
+<h3 id="word">engineer</h3>
+
+<img id="image" src="images/engineer.jpg" width="200">
+
+<p id="ipa"></p>
+<p id="meaning"></p>
+
+<button onclick="playAudio()">🔊 Listen</button>
+<button onclick="startSpeech()">🎤 Speak</button>
+
+<input id="answer" placeholder="Type what you hear">
+
+<button onclick="checkAnswer()">Check</button>
+
+<p id="result"></p>
+<p id="score">Score: 0</p>
+
+<button onclick="nextWord()">Next ➜</button>
+<button onclick="finish()">Finish 🎉</button>
+<button onclick="showResults()">📊 View Results</button>
+
+<div id="resultTable"></div>
+
+</div>
+
+<script>
+
+let audio = new Audio();
+
+const vocab = [
+{word:"engineer", ipa:"/ˌendʒɪˈnɪər/", meaning:"kỹ sư"},
+{word:"biologist", ipa:"/baɪˈɒlədʒɪst/", meaning:"nhà sinh học"},
+{word:"vet", ipa:"/vet/", meaning:"bác sĩ thú y"},
+{word:"astronaut", ipa:"/ˈæstrənɔːt/", meaning:"phi hành gia"},
+{word:"mechanic", ipa:"/məˈkænɪk/", meaning:"thợ sửa máy"},
+{word:"chemist", ipa:"/ˈkemɪst/", meaning:"nhà hóa học"}
+];
+
+let index = 0;
+let score = 0;
+
+function showWord(){
+let w = vocab[index];
+
+document.getElementById("word").innerText = w.word;
+document.getElementById("ipa").innerText = w.ipa;
+document.getElementById("meaning").innerText = w.meaning;
+
+// ảnh
+let imgName = w.word.replace(/\s/g,"");
+document.getElementById("image").src = "images/" + imgName + ".jpg";
+
+document.getElementById("answer").value="";
+document.getElementById("result").innerText="";
+}
+
+function nextWord(){
+index++;
+if(index>=vocab.length) index=0;
+showWord();
+}
+
+function playAudio(){
+let word = vocab[index].word.replace(/\s/g,"");
+
+// 👉 SỬA CHO ĐÚNG THƯ MỤC CỦA BẠN
+audio.src = "radio/" + word + ".mp3";
+
+audio.play().catch(()=>alert("❌ Không có file audio"));
+}
+
+function checkAnswer(){
+let input = document.getElementById("answer").value.toLowerCase().trim();
+let correct = vocab[index].word.toLowerCase();
+
+if(input === correct){
+document.getElementById("result").innerText="✅ Correct";
+score++;
+}else{
+document.getElementById("result").innerText="❌ Try again";
+}
+
+document.getElementById("score").innerText="Score: " + score;
+}
+
+function startSpeech(){
+if (!('webkitSpeechRecognition' in window)){
+alert("👉 Dùng Chrome để dùng Speak!");
+return;
+}
+
+let recog = new webkitSpeechRecognition();
+recog.lang="en-US";
+recog.start();
+
+recog.onresult = function(e){
+document.getElementById("answer").value =
+e.results[0][0].transcript.toLowerCase();
+};
+}
+
+function finish(){
+let name = document.getElementById("studentName").value;
+
+if(name === ""){
+alert("Nhập tên!");
+return;
+}
+
+let data = JSON.parse(localStorage.getItem("students")) || [];
+
+data.push({
+name: name,
+score: score,
+total: vocab.length,
+time: new Date().toLocaleString()
+});
+
+localStorage.setItem("students", JSON.stringify(data));
+
+alert("🎉 " + name + ": " + score + "/" + vocab.length);
+}
+
+function showResults(){
+let data = JSON.parse(localStorage.getItem("students")) || [];
+
+if(data.length === 0){
+alert("Chưa có dữ liệu!");
+return;
+}
+
+let html = "<h3>📊 Student Results</h3>";
+html += "<table>";
+html += "<tr><th>Name</th><th>Score</th><th>Time</th></tr>";
+
+data.forEach(item=>{
+html += "<tr>";
+html += "<td>"+item.name+"</td>";
+html += "<td>"+item.score+"/"+item.total+"</td>";
+html += "<td>"+item.time+"</td>";
+html += "</tr>";
+});
+
+html += "</table>";
+
+document.getElementById("resultTable").innerHTML = html;
+}
+
+showWord();
+
+</script>
+
+</body>
+</html>
